@@ -42,9 +42,17 @@ brandbook — генератор брендбуків
       --budget <usd>  стеля витрат на прогін
       --no-cache      не брати з кешу
 
-Приклади:
-  node src/cli.js brief:validate data/brief.example.json
-  node src/cli.js brief:extract --from input/brief --url https://example.com
+  build                              зібрати брендбук у PDF
+      --brief  <файл>   типово input/brief/brief.json
+      --out    <файл>   типово output/brandbook.pdf
+      --budget <usd>    стеля витрат на прогін
+
+Повний шлях:
+  1. покласти матеріали компанії в input/brief/ (txt, md)
+  2. покласти логотип у векторі в input/logo/ (svg)
+  3. node src/cli.js brief:extract --url https://сайт-компанії
+  4. перевірити input/brief/brief.json, виправити припущення
+  5. node src/cli.js build
 `;
 
 switch (cmd) {
@@ -75,6 +83,50 @@ switch (cmd) {
     if (assumptions) console.log(dim(`припущень: ${assumptions} (підлягають підтвердженню)`));
     printReport(report);
     console.log(dim(`витрачено: $${spend.usd.toFixed(4)}`));
+    break;
+  }
+
+  case 'build': {
+    const { buildTokens, writeTokens } = await import('./tokens/build.js');
+    const { buildStrategy, buildContent, selectSections } = await import('./content/build.js');
+    const { buildHtml, renderPdf } = await import('./render/build.js');
+
+    const briefPath = resolve(ROOT, flag('brief', 'input/brief/brief.json'));
+    const budget = flag('budget') ? Number(flag('budget')) : null;
+    const outPdf = resolve(ROOT, flag('out', 'output/brandbook.pdf'));
+
+    console.log(dim(`бриф: ${briefPath}`));
+    const brief = JSON.parse(readFileSync(briefPath, 'utf8'));
+
+    const rep = validateBrief(brief);
+    if (!printReport(rep)) {
+      console.log(red('\nБриф не пройшов валідацію — виправте помилки й повторіть.'));
+      process.exit(1);
+    }
+
+    const sections = selectSections(brief);
+    console.log(`\n[1/5] секцій обрано: ${sections.length} (пресет ${brief.scope?.preset ?? 'standard'})`);
+
+    console.log('[2/5] токени з логотипа й брифу…');
+    const tokens = writeTokens(buildTokens(brief));
+    for (const w of tokens.warnings) console.log(`  ${yellow('!')} ${w}`);
+    console.log(`  палітра: ${tokens.color.primary.map(c => c.hex).join(' ')} ${dim(`(${tokens.color.source})`)}`);
+
+    console.log('[3/5] стратегія…');
+    const { strategy, meta } = await buildStrategy(brief, { budgetUsd: budget });
+    writeFileSync(resolve(ROOT, 'output/strategy.json'), JSON.stringify(strategy, null, 2));
+    console.log(`  ${meta.cached ? dim('з кешу') : `$${meta.costUsd.toFixed(4)}`} · «${strategy.essence}»`);
+
+    console.log('[4/5] контент сторінок…');
+    const { content } = await buildContent(brief, strategy, sections, { budgetUsd: budget });
+    writeFileSync(resolve(ROOT, 'output/content.json'), JSON.stringify(content, null, 2));
+
+    console.log('[5/5] верстка й PDF…');
+    const html = buildHtml({ brief, strategy, tokens, sections, content });
+    const { pdfPath } = await renderPdf(html, outPdf);
+
+    console.log(`\n${green('✓')} ${pdfPath}`);
+    console.log(dim(`  сторінок ~${sections.length + 3} · витрачено $${spend.usd.toFixed(4)}`));
     break;
   }
 

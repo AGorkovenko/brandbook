@@ -129,6 +129,34 @@ export async function chat({
   throw new Error(`OpenRouter не відповів після 4 спроб: ${lastErr.message}`);
 }
 
+/**
+ * Виклик із гарантією валідного JSON.
+ * Моделі регулярно ламають JSON у текстах про типографіку (лапки в значеннях),
+ * тому на помилку парсингу йде повтор із конкретним поясненням.
+ */
+export async function chatJson({ retries = 2, ...opts }) {
+  const messages = [...opts.messages];
+  let lastErr;
+
+  for (let i = 0; i <= retries; i++) {
+    const res = await chat({ ...opts, messages, noCache: opts.noCache || i > 0 });
+    try {
+      return { data: parseJson(res.text), meta: res };
+    } catch (e) {
+      lastErr = e;
+      messages.push({ role: 'assistant', content: res.text.slice(-1200) });
+      messages.push({
+        role: 'user',
+        content: `Відповідь не є валідним JSON: ${e.message}\n\n`
+          + 'Найчастіша причина — лапки всередині рядкових значень. '
+          + 'Усередині тексту використовуй «ялинки» або екрануй прямі лапки як \\". '
+          + 'Поверни весь JSON заново, без markdown-огорожі.'
+      });
+    }
+  }
+  throw lastErr;
+}
+
 /** Витягує JSON з відповіді, навіть якщо модель загорнула його в ``` огорожу. */
 export function parseJson(text) {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
