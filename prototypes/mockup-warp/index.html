@@ -1,0 +1,96 @@
+<meta charset="utf-8">
+<title>Доказ: деформація логотипа по тканині</title>
+<style>
+  body { margin:0; background:#111309; font:13px/1.45 -apple-system,system-ui,sans-serif; color:#e8e6df; }
+  .row { display:flex; gap:20px; padding:22px; }
+  figure { margin:0; flex:1; }
+  svg.stage { width:100%; display:block; border-radius:8px; background:#1b1d14; }
+  figcaption { margin-top:10px; font-size:12px; color:#94917f; }
+  figcaption b { color:#e8e6df; display:block; font-size:13px; margin-bottom:3px; }
+</style>
+<body>
+<div class="row" id="row"></div>
+
+<script>
+// ── Спільна карта складок ──────────────────────────────────────────────
+// Критично: футболка й логотип мусять деформуватись ОДНІЄЮ картою.
+// feTurbulence генерує шум у системі координат свого елемента, тому обидва
+// елементи лежать в одному viewBox без власних transform — інакше карти
+// розійдуться і принт «попливе» окремо від тканини.
+// У пайплайні feTurbulence замінюється на feImage зі згенерованого фото.
+const MAP = `
+  <feTurbulence type="fractalNoise" baseFrequency="0.005 0.028"
+                numOctaves="3" seed="9" result="raw"/>
+  <feColorMatrix in="raw" type="saturate" values="0" result="grayRaw"/>
+  <feComponentTransfer in="grayRaw" result="gray">
+    <feFuncR type="linear" slope="1.7" intercept="-0.35"/>
+    <feFuncG type="linear" slope="1.7" intercept="-0.35"/>
+    <feFuncB type="linear" slope="1.7" intercept="-0.35"/>
+    <feFuncA type="linear" slope="0" intercept="1"/>
+  </feComponentTransfer>
+  <feGaussianBlur in="gray" stdDeviation="2" result="map"/>`;
+
+const TEE_PATH = `M150 58 L108 80 L60 150 L102 184 L124 158 L124 374
+  Q210 388 296 374 L296 158 L318 184 L360 150 L312 80 L270 58
+  Q210 96 150 58 Z`;
+
+const FILTERS = `
+<defs>
+  <!-- Тканина: складки затінюють базовий колір -->
+  <filter id="tee" x="0" y="0" width="100%" height="100%">
+    ${MAP}
+    <feComponentTransfer in="map" result="light">
+      <feFuncR type="linear" slope="0.55" intercept="0.50"/>
+      <feFuncG type="linear" slope="0.55" intercept="0.50"/>
+      <feFuncB type="linear" slope="0.55" intercept="0.50"/>
+    </feComponentTransfer>
+    <feComposite in="light" in2="SourceGraphic" operator="in" result="litFabric"/>
+    <feBlend in="SourceGraphic" in2="litFabric" mode="multiply"/>
+  </filter>
+
+  ${[6, 14, 34].map(s => `
+  <filter id="warp${s}" x="-30%" y="-30%" width="160%" height="160%">
+    ${MAP}
+    <feDisplacementMap in="SourceGraphic" in2="map" scale="${s}"
+                       xChannelSelector="R" yChannelSelector="G" result="warped"/>
+    <feComponentTransfer in="map" result="light">
+      <feFuncR type="linear" slope="0.85" intercept="0.38"/>
+      <feFuncG type="linear" slope="0.85" intercept="0.38"/>
+      <feFuncB type="linear" slope="0.85" intercept="0.38"/>
+    </feComponentTransfer>
+    <feComposite in="light" in2="warped" operator="in" result="shade"/>
+    <feBlend in="warped" in2="shade" mode="multiply"/>
+  </filter>`).join('')}
+</defs>`;
+
+// Знак у абсолютних координатах спільного viewBox — без transform,
+// інакше карта шуму зсунеться відносно тканини.
+const logo = (filter) => `
+  <g ${filter ? `filter="url(#${filter})"` : ''} fill="#1d3b2a">
+    <circle cx="176" cy="196" r="25" fill="none" stroke="#1d3b2a" stroke-width="7"/>
+    <path d="M176 177 Q189 196 176 215 Q163 196 176 177 Z"/>
+    <text x="140" y="258" font-family="Helvetica,Arial" font-size="26"
+          font-weight="700" letter-spacing="6">ЗЕРНО</text>
+  </g>`;
+
+const cases = [
+  ['scale 0 — плоско', null,
+   'Знак лежить поверх тканини без обробки. Складки під ним ігноруються — читається як наліпка.'],
+  ['scale 6 — обережно', 'warp6',
+   'Ледь помітне «пливіння» контуру плюс притінення у складках. Безпечно для знаків із тонкими деталями й дрібним текстом.'],
+  ['scale 14 — робочий режим', 'warp14',
+   'Знак виразно лягає на тканину, коло лишається колом, «ЗЕРНО» читається. Це цільове значення для футболки.'],
+  ['scale 34 — знак зруйновано', 'warp34',
+   'Коло стало плямою, літери деформовані. Порушено головне правило брендбуку: пропорції знака недоторкані. Так не можна.']
+];
+
+document.getElementById('row').innerHTML = cases.map(([t, f, d]) => `
+  <figure>
+    <svg class="stage" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+      ${FILTERS}
+      <path d="${TEE_PATH}" fill="#cfcaba" filter="url(#tee)"/>
+      ${logo(f)}
+    </svg>
+    <figcaption><b>${t}</b>${d}</figcaption>
+  </figure>`).join('');
+</script>

@@ -1,0 +1,241 @@
+{
+  "version": "0.1.0",
+  "updated": "2026-07-28",
+  "description": "Шаблони мокапів: жорстко заданий ракурс у промпті + зона нанесення в частках кадру. Так композиція не залежить від випадкового виходу моделі. Класи поверхонь — див. docs/04-mockups.md",
+  "surfaceClasses": {
+    "A": "плоска фронтальна — CSS 1:1, логотип лишається вектором",
+    "B": "плоска під кутом — matrix3d по 4 кутах, лишається вектором",
+    "C": "м'яка криволінійна — displacement map + карта освітлення, растеризується",
+    "D": "жорстка криволінійна — аналітична циліндрична деформація, растеризується",
+    "E": "складна — не генеруємо"
+  },
+  "promptSuffix": {
+    "always": "no print, no logo, no text, no lettering, no branding, blank surface",
+    "why": "Текст і знак ніколи не генеруються моделлю: кирилиця перетворюється на псевдотекст. Усе наноситься композитингом.",
+    "lighting": "soft natural side light, subtle shadows, matte finish"
+  },
+  "templates": [
+    {
+      "id": "tee-flatlay-front",
+      "title": "Футболка, розкладена фронтально",
+      "section": "app.merch",
+      "class": "C",
+      "prompt": "plain {color} cotton t-shirt, front view, flat lay on neutral seamless surface, centered, full garment in frame, subtle fabric folds",
+      "printZone": {
+        "x": 0.34,
+        "y": 0.28,
+        "w": 0.32,
+        "h": 0.2
+      },
+      "warp": {
+        "blur": 3,
+        "shadeSlope": 0.75,
+        "shadeIntercept": 0.42,
+        "scaleRatio": 0.11,
+        "note": "scale_px = scaleRatio × ширина_принта_px. Стеля 0.15 — вище знак руйнується."
+      },
+      "spec": {
+        "printWidthCm": 22,
+        "offsetFromCollarCm": 7,
+        "methods": [
+          "DTG",
+          "шовкографія"
+        ],
+        "note": "Розмір принта вказано для розміру M; для інших масштабується пропорційно зросту виробу."
+      }
+    },
+    {
+      "id": "hoodie-front",
+      "title": "Худі на манекені, фронтально",
+      "section": "app.merch",
+      "class": "C",
+      "prompt": "plain {color} heavyweight hoodie on invisible mannequin, front view, centered, hood visible, subtle fabric folds",
+      "printZone": {
+        "x": 0.36,
+        "y": 0.3,
+        "w": 0.28,
+        "h": 0.16
+      },
+      "warp": {
+        "blur": 4,
+        "shadeSlope": 0.72,
+        "shadeIntercept": 0.4,
+        "scaleRatio": 0.12,
+        "note": "scale_px = scaleRatio × ширина_принта_px. Стеля 0.15 — вище знак руйнується."
+      },
+      "spec": {
+        "printWidthCm": 18,
+        "offsetFromCollarCm": 9,
+        "methods": [
+          "вишивка",
+          "DTG"
+        ],
+        "note": "Зона вужча за футболку через кишеню-кенгуру й шов капюшона. Для вишивки додається рельєф."
+      }
+    },
+    {
+      "id": "tote-front",
+      "title": "Тканинна сумка",
+      "section": "app.merch",
+      "class": "C",
+      "prompt": "plain {color} canvas tote bag, front view, hanging flat, handles visible, subtle fabric texture",
+      "printZone": {
+        "x": 0.3,
+        "y": 0.35,
+        "w": 0.4,
+        "h": 0.28
+      },
+      "warp": {
+        "blur": 2.5,
+        "shadeSlope": 0.8,
+        "shadeIntercept": 0.45,
+        "scaleRatio": 0.05,
+        "note": "scale_px = scaleRatio × ширина_принта_px. Стеля 0.15 — вище знак руйнується."
+      },
+      "spec": {
+        "printWidthCm": 24,
+        "methods": [
+          "шовкографія"
+        ]
+      }
+    },
+    {
+      "id": "cap-front",
+      "title": "Кепка, фронтально",
+      "section": "app.merch",
+      "class": "C",
+      "prompt": "plain {color} six-panel cap, front view, centered, curved brim",
+      "printZone": {
+        "x": 0.38,
+        "y": 0.4,
+        "w": 0.24,
+        "h": 0.14
+      },
+      "warp": {
+        "blur": 3,
+        "shadeSlope": 0.7,
+        "shadeIntercept": 0.4,
+        "scaleRatio": 0.08,
+        "note": "scale_px = scaleRatio × ширина_принта_px. Стеля 0.15 — вище знак руйнується."
+      },
+      "spec": {
+        "printWidthCm": 9,
+        "methods": [
+          "вишивка"
+        ],
+        "note": "Тільки спрощена версія знака — дрібні деталі вишивка не тримає."
+      }
+    },
+    {
+      "id": "businesscard-angle",
+      "title": "Візитка на поверхні під кутом",
+      "section": "app.stationery",
+      "class": "B",
+      "prompt": "blank {color} business card lying on neutral textured surface, slight angle, shallow depth of field",
+      "corners": [
+        [
+          0.22,
+          0.38
+        ],
+        [
+          0.74,
+          0.3
+        ],
+        [
+          0.8,
+          0.64
+        ],
+        [
+          0.26,
+          0.74
+        ]
+      ],
+      "spec": {
+        "sizeMm": "90×50",
+        "bleedMm": 3,
+        "methods": [
+          "офсет",
+          "цифровий друк"
+        ]
+      }
+    },
+    {
+      "id": "letterhead-flat",
+      "title": "Бланк, фронтально",
+      "section": "app.stationery",
+      "class": "A",
+      "prompt": "blank white A4 sheet on neutral surface, top-down view, centered",
+      "printZone": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 1.0,
+        "h": 1.0
+      },
+      "spec": {
+        "sizeMm": "210×297",
+        "marginsMm": "20/20/20/25"
+      }
+    },
+    {
+      "id": "mug-front",
+      "title": "Чашка",
+      "section": "app.merch",
+      "class": "D",
+      "prompt": "plain {color} ceramic mug, front view, handle to the right, neutral background",
+      "cylinder": {
+        "centerX": 0.5,
+        "radiusRatio": 0.34,
+        "printArcDeg": 120
+      },
+      "spec": {
+        "printHeightCm": 8,
+        "methods": [
+          "сублімація",
+          "деколь"
+        ]
+      }
+    },
+    {
+      "id": "packaging-front",
+      "title": "Упаковка, фронтально",
+      "section": "app.packaging",
+      "class": "B",
+      "prompt": "blank {color} kraft paper stand-up pouch, front view, centered, matte finish, subtle material texture",
+      "corners": [
+        [
+          0.3,
+          0.22
+        ],
+        [
+          0.7,
+          0.22
+        ],
+        [
+          0.72,
+          0.82
+        ],
+        [
+          0.28,
+          0.82
+        ]
+      ],
+      "spec": {
+        "note": "Обов'язкові елементи маркування задаються окремо в секції app.packaging."
+      }
+    }
+  ],
+  "excluded": {
+    "class": "E",
+    "examples": [
+      "зім'ятий папір",
+      "драпіроване полотно",
+      "логотип через край рукава",
+      "логотип на ручці чашки"
+    ],
+    "why": "Потребує 3D-рендеру з UV-розгорткою. Неякісний мокап гірший за його відсутність."
+  },
+  "warpLimits": {
+    "maxScaleRatio": 0.15,
+    "why": "Вище цього значення пропорції знака спотворюються — порушення правила брендбуку. Заміряно на prototypes/mockup-warp."
+  }
+}
