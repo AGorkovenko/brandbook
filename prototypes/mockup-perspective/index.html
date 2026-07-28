@@ -1,0 +1,208 @@
+<meta charset="utf-8">
+<title>Доказ: банер на трамваї в перспективі та русі</title>
+<style>
+  body { margin:0; background:#0f1113; font:13px/1.45 -apple-system,system-ui,sans-serif; color:#e9e7e2; }
+  .row { display:flex; gap:18px; padding:20px; }
+  figure { margin:0; flex:1; }
+  .stage { position:relative; width:100%; aspect-ratio:44/30; border-radius:8px; overflow:hidden; }
+  .stage canvas, .stage .layer { position:absolute; inset:0; width:100%; height:100%; }
+  .layer { overflow:hidden; }
+  .logo { position:absolute; left:0; top:0; transform-origin:0 0; }
+  figcaption { margin-top:9px; font-size:12px; color:#8f8d86; }
+  figcaption b { color:#e9e7e2; display:block; font-size:13px; margin-bottom:3px; }
+</style>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <!-- Спрямоване розмиття: у CSS немає directional blur, у SVG — просто
+       різні stdDeviation по осях. Напрямок і сила знімаються з розмиття
+       країв самої хромакей-панелі. -->
+  <filter id="motion"><feGaussianBlur stdDeviation="1.5 0.25"/></filter>
+</defs></svg>
+<div class="row" id="row"></div>
+
+<script>
+const W = 440, H = 300;
+
+// ── Сцена-заготовка ────────────────────────────────────────────────────
+// Це імітація того, що поверне модель за промптом:
+//   "city tram in motion, three-quarter view, plain chroma green panel
+//    on the side, no text, no logo, motion blurred background"
+// Панель навмисно яскраво-зелена: далі вона працює як хромакей.
+function drawScene(ctx) {
+  ctx.clearRect(0,0,W,H);
+
+  ctx.fillStyle = '#2b3138'; ctx.fillRect(0,0,W,H*0.62);
+  ctx.save(); ctx.filter = 'blur(7px)';          // фон у русі
+  for (let i=0;i<26;i++) {
+    ctx.fillStyle = ['#3b444d','#333a42','#454e57','#2f353c'][i%4];
+    ctx.fillRect(i*22 - 10, 40 + (i%5)*13, 16, 120 - (i%4)*22);
+  }
+  ctx.restore();
+  ctx.fillStyle = '#22262b'; ctx.fillRect(0,H*0.62,W,H*0.38);
+
+  // Кузов у перспективі: ближній край нижчий і вищий за дальній
+  const body = [[40,96],[406,126],[406,232],[40,246]];
+  ctx.beginPath(); ctx.moveTo(...body[0]);
+  body.slice(1).forEach(p=>ctx.lineTo(...p)); ctx.closePath();
+  ctx.fillStyle = '#b8bcc0'; ctx.fill();
+  ctx.fillStyle = '#7d8792';
+  ctx.beginPath(); ctx.moveTo(52,108); ctx.lineTo(150,116);
+  ctx.lineTo(150,158); ctx.lineTo(52,152); ctx.closePath(); ctx.fill();
+
+  // ── Хромакей-панель ──────────────────────────────────────────────────
+  // Градієнт усередині зеленого несе освітлення сцени: ліворуч борт
+  // у тіні, праворуч світліший. Ця варіація потім переноситься на знак.
+  const panel = [[168,124],[382,141],[382,214],[168,205]];
+  const g = ctx.createLinearGradient(168,0,382,0);
+  g.addColorStop(0,   '#00a02e');
+  g.addColorStop(0.55,'#00d942');
+  g.addColorStop(1,   '#00ee4a');
+  ctx.beginPath(); ctx.moveTo(...panel[0]);
+  panel.slice(1).forEach(p=>ctx.lineTo(...p)); ctx.closePath();
+  ctx.fillStyle = g; ctx.fill();
+
+  // Колеса
+  ctx.fillStyle = '#191c20';
+  [110, 330].forEach(x => { ctx.beginPath(); ctx.ellipse(x,244,26,13,0,0,7); ctx.fill(); });
+
+  // ── Оклюзія ──────────────────────────────────────────────────────────
+  // Стовп ПЕРЕД трамваєм. Він перекриває частину панелі — і саме тому
+  // хромакей дає маску безкоштовно: під стовпом зеленого немає.
+  ctx.fillStyle = '#4a5058'; ctx.fillRect(286,52,17,H-52);
+  ctx.fillStyle = '#3c4249'; ctx.fillRect(286,52,5,H-52);
+  return { body, panel };
+}
+
+// ── Витяг геометрії, маски та освітлення з зеленого ────────────────────
+function analyze(ctx) {
+  const d = ctx.getImageData(0,0,W,H).data;
+  const mask = document.createElement('canvas'); mask.width=W; mask.height=H;
+  const shade = document.createElement('canvas'); shade.width=W; shade.height=H;
+  const mi = mask.getContext('2d').createImageData(W,H);
+  const si = shade.getContext('2d').createImageData(W,H);
+
+  // Два пороги, як у класичному кеїнгу: строгий визначає ядро (де знак
+  // видимий), широкий ловить напівзелені пікселі антиаліасингу по краю.
+  // З одним порогом по периметру лишається зеленувата облямівка.
+  const key = new Uint8Array(W*H), spill = new Uint8Array(W*H);
+  for (let i=0;i<W*H;i++) {
+    const r=d[i*4], g=d[i*4+1], b=d[i*4+2];
+    key[i]   = (g>110 && g>r*1.8  && g>b*1.8 ) ? 1 : 0;
+    spill[i] = (g>60  && g>r*1.12 && g>b*1.12) ? 1 : 0;
+  }
+
+  // Despill: хромакей треба ПРИБРАТИ зі сцени, а не прикрити банером.
+  // Маска обмежує лише накладений знак, а зелень лишається у фоні — і
+  // будь-яка ділянка панелі, не покрита банером, світить зеленим.
+  // Тому зелені пікселі перефарбовуються в нейтральний сірий зі
+  // збереженням яскравості: освітлення сцени не втрачається.
+  const clean = document.createElement('canvas'); clean.width=W; clean.height=H;
+  const ci = clean.getContext('2d').createImageData(W,H);
+  ci.data.set(d);
+
+  let pts = [], lum = [];
+  for (let i=0;i<W*H;i++) {
+    mi.data[i*4]=mi.data[i*4+1]=mi.data[i*4+2]=255;
+    mi.data[i*4+3] = key[i] ? 255 : 0;             // маска: де знак видимий
+    if (key[i]) {
+      pts.push([i%W, (i/W)|0]);
+      const v = d[i*4+1];                           // освітлення з зеленого
+      lum.push(v);
+      si.data[i*4]=si.data[i*4+1]=si.data[i*4+2]=v;
+      si.data[i*4+3]=255;
+    }
+    if (spill[i]) {                                 // ширший поріг для очищення
+      const n = Math.round(0.5*d[i*4+1] + 92);
+      ci.data[i*4]=ci.data[i*4+1]=ci.data[i*4+2]=n;
+    }
+  }
+  clean.getContext('2d').putImageData(ci,0,0);
+  // нормалізація освітлення до 0.62…1.0, щоб знак притінювався, а не гаснув
+  const mx = Math.max(...lum);
+  for (let i=0;i<W*H;i++) if (si.data[i*4+3]) {
+    const n = 0.62 + 0.38*(si.data[i*4]/mx);
+    si.data[i*4]=si.data[i*4+1]=si.data[i*4+2] = Math.round(n*255);
+  }
+  mask.getContext('2d').putImageData(mi,0,0);
+  shade.getContext('2d').putImageData(si,0,0);
+
+  // Кути чотирикутника — екстремуми за сумою/різницею координат.
+  // Стовп ріже панель навпіл, але кути лежать поза розривом, тому працює.
+  const pick = f => pts.reduce((a,p)=> f(p)<f(a)?p:a, pts[0]);
+  const quad = [
+    pick(p=>p[0]+p[1]), pick(p=>-(p[0]-p[1])),
+    pick(p=>-(p[0]+p[1])), pick(p=>p[0]-p[1])
+  ];
+  return { quad, maskUrl: mask.toDataURL(), shadeUrl: shade.toDataURL(), cleanUrl: clean.toDataURL() };
+}
+
+// ── Проективна трансформація прямокутника в чотирикутник ───────────────
+function solve(A,b){
+  const n=b.length;
+  for(let i=0;i<n;i++){
+    let m=i; for(let j=i+1;j<n;j++) if(Math.abs(A[j][i])>Math.abs(A[m][i])) m=j;
+    [A[i],A[m]]=[A[m],A[i]]; [b[i],b[m]]=[b[m],b[i]];
+    for(let j=i+1;j<n;j++){ const f=A[j][i]/A[i][i];
+      for(let k=i;k<n;k++) A[j][k]-=f*A[i][k]; b[j]-=f*b[i]; }
+  }
+  const x=Array(n).fill(0);
+  for(let i=n-1;i>=0;i--){ let s=b[i];
+    for(let j=i+1;j<n;j++) s-=A[i][j]*x[j]; x[i]=s/A[i][i]; }
+  return x;
+}
+function matrixFor(w,h,q){
+  const src=[[0,0],[w,0],[w,h],[0,h]], A=[], b=[];
+  src.forEach((s,i)=>{ const [x,y]=s, [u,v]=q[i];
+    A.push([x,y,1,0,0,0,-u*x,-u*y]); b.push(u);
+    A.push([0,0,0,x,y,1,-v*x,-v*y]); b.push(v); });
+  const [a,bb,c,d,e,f,g,i]=solve(A,b);
+  return `matrix3d(${a},${d},0,${g},${bb},${e},0,${i},0,0,1,0,${c},${f},0,1)`;
+}
+
+const LOGO = `<svg viewBox="0 0 260 90" xmlns="http://www.w3.org/2000/svg">
+  <rect width="260" height="90" fill="#f4f1e8"/>
+  <circle cx="46" cy="45" r="24" fill="none" stroke="#1d3b2a" stroke-width="7"/>
+  <path d="M46 27 Q59 45 46 63 Q33 45 46 27 Z" fill="#1d3b2a"/>
+  <text x="84" y="58" font-family="Helvetica,Arial" font-size="30"
+        font-weight="700" letter-spacing="4" fill="#1d3b2a">ЗЕРНО</text></svg>`;
+const logoUrl = 'data:image/svg+xml;utf8,'+encodeURIComponent(LOGO);
+
+// ── Складання панелей ──────────────────────────────────────────────────
+const off = document.createElement('canvas'); off.width=W; off.height=H;
+drawScene(off.getContext('2d'));
+const { quad, maskUrl, shadeUrl, cleanUrl } = analyze(off.getContext('2d'));
+
+const LW = 260, LH = 90;
+const mtx = matrixFor(LW, LH, quad);
+
+const variants = [
+  ['Заготовка від моделі', s => '',
+   'Модель малює трамвай із порожньою зеленою панеллю. Знак і текст не генеруються — кирилицю модель перетворила б на псевдотекст.'],
+
+  ['Наївне накладання', s => `
+     <div class="layer"><img class="logo" src="${logoUrl}"
+       style="width:${LW}px;left:172px;top:132px"></div>`,
+   'Знак покладено прямо. Він не в перспективі борту, не розмитий рухом і — головне — лежить ПОВЕРХ стовпа, якого фізично не міг би перекрити.'],
+
+  ['Повний конвеєр', s => `
+     <img src="${cleanUrl}" style="position:absolute;inset:0;width:100%">
+     <div class="layer" style="isolation:isolate;
+            -webkit-mask-image:url(${maskUrl});mask-image:url(${maskUrl});
+            -webkit-mask-size:100% 100%;mask-size:100% 100%">
+       <img class="logo" src="${logoUrl}"
+            style="width:${LW}px;height:${LH}px;transform:${mtx};filter:url(#motion)">
+       <img src="${shadeUrl}" style="position:absolute;inset:0;width:100%;height:100%;
+            mix-blend-mode:multiply;pointer-events:none">
+     </div>`,
+   'Перспектива з кутів панелі, стримане спрямоване розмиття, освітлення з градієнта зеленого, а маска хромакею повертає стовп поверх знака.']
+];
+
+document.getElementById('row').innerHTML = variants.map(([t,mk,d])=>`
+  <figure>
+    <div class="stage" id="s${t.length}">
+      <img src="${off.toDataURL()}" style="position:absolute;inset:0;width:100%">
+      ${mk()}
+    </div>
+    <figcaption><b>${t}</b>${d}</figcaption>
+  </figure>`).join('');
+</script>

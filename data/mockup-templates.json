@@ -7,7 +7,8 @@
     "B": "плоска під кутом — matrix3d по 4 кутах, лишається вектором",
     "C": "м'яка криволінійна — displacement map + карта освітлення, растеризується",
     "D": "жорстка криволінійна — аналітична циліндрична деформація, растеризується",
-    "E": "складна — не генеруємо"
+    "E": "складна — не генеруємо",
+    "note": "Клас описує геометрію. Складність сцени — окрема вісь: контекстні сцени (рух, перспектива, оклюзія) використовують хромакей-панель. Див. docs/04-mockups.md"
   },
   "promptSuffix": {
     "always": "no print, no logo, no text, no lettering, no branding, blank surface",
@@ -222,6 +223,27 @@
       "spec": {
         "note": "Обов'язкові елементи маркування задаються окремо в секції app.packaging."
       }
+    },
+    {
+      "id": "tram-motion-side",
+      "title": "Міський трамвай у русі, три чверті",
+      "section": "app.transport",
+      "class": "B",
+      "scene": "contextual",
+      "prompt": "city tram in motion on a street, three-quarter view, plain chroma green flat advertising panel on the side, motion blurred background, overcast daylight, {color} tram body",
+      "chromaKey": true,
+      "motionBlur": {
+        "stdDeviation": "1.5 0.25",
+        "note": "Напрямок і сила знімаються з розмиття країв панелі."
+      },
+      "spec": {
+        "panelSizeCm": "240×70",
+        "methods": [
+          "плівка Oracal",
+          "брендування бортів"
+        ],
+        "note": "Знак на транспорті читається 2–3 секунди — використовується спрощена версія без дрібних деталей."
+      }
     }
   ],
   "excluded": {
@@ -237,5 +259,28 @@
   "warpLimits": {
     "maxScaleRatio": 0.15,
     "why": "Вище цього значення пропорції знака спотворюються — порушення правила брендбуку. Заміряно на prototypes/mockup-warp."
+  },
+  "chromaKey": {
+    "defaultColor": "green",
+    "promptFragment": "plain chroma green flat panel, no text, no logo",
+    "thresholds": {
+      "core": {
+        "gainOverRB": 1.8,
+        "minG": 110
+      },
+      "spill": {
+        "gainOverRB": 1.12,
+        "minG": 60
+      }
+    },
+    "why": "Строгий поріг дає ядро маски, широкий очищає напівзелені пікселі антиаліасингу. З одним порогом лишається зеленувата облямівка.",
+    "fallbackColor": "magenta",
+    "fallbackWhen": "У кадрі багато природної зелені (трава, дерева).",
+    "gives": [
+      "перспектива з 4 кутів",
+      "оклюзія з розриву області",
+      "освітлення з градієнта",
+      "motion blur з розмиття країв"
+    ]
   }
 }
