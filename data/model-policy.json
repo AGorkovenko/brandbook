@@ -1,0 +1,107 @@
+{
+  "version": "0.1.0",
+  "updated": "2026-07-28",
+  "description": "Яка модель OpenRouter обслуговує яку секцію. Якість прив'язана до ролі сторінки в документі, а не до стадії роботи. Джерело цін — /api/v1/models, перевірено 28.07.2026.",
+
+  "tiers": {
+    "hero": {
+      "model": "google/gemini-3-pro-image",
+      "fallback": "openai/gpt-5-image",
+      "pricePerToken": 0.00012,
+      "note": "Мокапи носіїв, фотостиль, обкладинка. Сторінки, за якими замовник судить про весь брендбук. Економія тут знецінює документ.",
+      "attempts": 3,
+      "pickBest": true
+    },
+    "standard": {
+      "model": "google/gemini-3.1-flash-image",
+      "fallback": "openai/gpt-5.4-image-2",
+      "pricePerToken": 0.00006,
+      "note": "Серійні візуали, де важлива узгодженість, а не вражання: ілюстрації, патерни, іконки, портрети аудиторій.",
+      "attempts": 2,
+      "pickBest": true
+    },
+    "draft": {
+      "model": "google/gemini-2.5-flash-image",
+      "fallback": "google/gemini-3.1-flash-lite-image",
+      "pricePerToken": 0.00003,
+      "note": "Тільки для підбору промпту та прев'ю в UI. У фінальний PDF результати цього рівня не потрапляють ніколи.",
+      "attempts": 1,
+      "pickBest": false
+    }
+  },
+
+  "textTiers": {
+    "strategic": {
+      "model": "anthropic/claude-opus-4.8",
+      "fallback": "openai/gpt-5.4",
+      "note": "Блок STRATEGY і TOV. Вихід стає входом для всіх промптів генерації, помилка тут отруює весь документ."
+    },
+    "content": {
+      "model": "anthropic/claude-sonnet-4.6",
+      "fallback": "openai/gpt-5.4-mini",
+      "note": "Описові й службові тексти секцій, підписи, правила."
+    }
+  },
+
+  "rules": [
+    {
+      "match": { "group": ["applications"] },
+      "tier": "hero",
+      "why": "Мокапи носіїв — головний доказ, що система працює в реальному світі."
+    },
+    {
+      "match": { "id": ["graphics.photo", "graphics.3d", "meta.cover", "meta.manifesto"] },
+      "tier": "hero",
+      "why": "Фотостиль є еталоном, на який рівняються всі наступні зйомки. Обкладинка — перше враження."
+    },
+    {
+      "match": { "id": ["logo.on-backgrounds", "logo.misuse", "digital.app-icon"] },
+      "tier": "hero",
+      "why": "Сцени під композитинг логотипа: дефекти фону одразу помітні поруч із чітким вектором."
+    },
+    {
+      "match": { "production": ["composite"] },
+      "tier": "hero",
+      "why": "Будь-яка сцена, на яку лягає логотип, мусить витримувати сусідство з вектором."
+    },
+    {
+      "match": { "id": ["graphics.illustration", "graphics.patterns", "graphics.icons", "graphics.elements"] },
+      "tier": "standard",
+      "why": "Серії, де узгодженість між елементами важливіша за детальність кожного."
+    },
+    {
+      "match": { "group": ["strategy"] },
+      "tier": "standard",
+      "why": "Ілюстративний супровід стратегії — не самоціль, працює на текст."
+    }
+  ],
+
+  "default": "standard",
+
+  "textRules": [
+    { "match": { "group": ["strategy", "verbal"] }, "tier": "strategic" },
+    { "match": { "critical": true }, "tier": "strategic" }
+  ],
+
+  "economics": {
+    "tokensPerImage": 1300,
+    "note": "Оцінка, підлягає заміру на першому реальному прогоні.",
+    "estimatedCostPerImage": {
+      "hero": "$0.156 × 3 спроби = $0.47",
+      "standard": "$0.078 × 2 спроби = $0.16",
+      "draft": "$0.039"
+    },
+    "estimatedCostPerBrandbook": {
+      "mini": "~$6",
+      "standard": "~$18",
+      "full": "~$30",
+      "note": "Груба оцінка до першого заміру. Кеш за хешем промпту робить повторні збірки PDF безкоштовними."
+    }
+  },
+
+  "caching": {
+    "key": "sha256(model + prompt + referenceHashes + seed)",
+    "location": ".cache/images/",
+    "note": "Перезбірка PDF не має коштувати нічого. Платимо лише за нові або змінені промпти."
+  }
+}

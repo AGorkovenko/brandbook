@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/AGorkovenko/brandbook/data/brief.schema.json",
+  "title": "Бриф на брендбук",
+  "description": "Вхідні дані пайплайну. Кожне поле мусить простежуватись до конкретної секції реєстру або до промпту генерації — питань «для галочки» тут немає. Заповнюється вручну або витягується LLM з матеріалів клієнта з подальшим підтвердженням.",
+  "type": "object",
+  "required": ["company", "product", "audience", "scope"],
+  "additionalProperties": false,
+
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Службова інформація про сам бриф.",
+      "properties": {
+        "version": { "type": "string" },
+        "filledAt": { "type": "string", "format": "date" },
+        "mode": {
+          "enum": ["manual", "extracted", "mixed"],
+          "description": "manual — заповнив клієнт; extracted — LLM витяг з матеріалів; mixed — витяг + правки."
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "Припущення, зроблені через брак даних. Виводяться в брендбук окремим блоком і підлягають підтвердженню замовником.",
+          "items": {
+            "type": "object",
+            "required": ["field", "assumed", "why"],
+            "properties": {
+              "field": { "type": "string" },
+              "assumed": { "type": "string" },
+              "why": { "type": "string" },
+              "confirmed": { "type": "boolean", "default": false }
+            }
+          }
+        }
+      }
+    },
+
+    "company": {
+      "type": "object",
+      "description": "→ strategy.*, meta.cover, gov.contacts",
+      "required": ["name", "industry"],
+      "properties": {
+        "name": { "type": "string", "description": "Назва бренду в правильному написанні. → verbal.name" },
+        "legalName": { "type": "string", "description": "Юридична назва, якщо відрізняється. → gov.legal" },
+        "industry": { "type": "string", "description": "Галузь простими словами. Задає візуальні конвенції категорії." },
+        "description": { "type": "string", "description": "Чим займається компанія, 2–3 речення." },
+        "founded": { "type": "integer" },
+        "size": { "enum": ["solo", "2-10", "11-50", "51-200", "200+"], "description": "Впливає на глибину брендбуку й на GOVERNANCE." },
+        "geo": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ринки присутності. → фотостиль (локації, типажі людей), мови."
+        },
+        "website": { "type": "string" },
+        "stage": {
+          "enum": ["new-brand", "rebranding", "formalizing-existing"],
+          "description": "new-brand — створюємо з нуля; rebranding — змінюємо; formalizing-existing — описуємо те, що вже склалось. Радикально впливає на свободу генерації."
+        }
+      }
+    },
+
+    "product": {
+      "type": "object",
+      "description": "→ strategy.positioning, app.packaging, graphics.photo",
+      "required": ["what"],
+      "properties": {
+        "what": { "type": "string", "description": "Що саме продаєте. Конкретно, без маркетингових абстракцій." },
+        "offerings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ключові продукти чи послуги. → logo.sub-brands, app.packaging"
+        },
+        "priceSegment": {
+          "enum": ["budget", "mid", "premium", "luxury"],
+          "description": "Найсильніший одиничний важіль візуального стилю: визначає щільність, кольори, фактури, тип зйомки."
+        },
+        "channels": {
+          "type": "array",
+          "items": { "enum": ["retail", "online", "marketplace", "b2b-direct", "franchise", "app", "horeca", "wholesale"] },
+          "description": "→ які секції APPLICATIONS взагалі потрібні."
+        },
+        "physicalProduct": { "type": "boolean", "description": "Чи є фізичний товар. Вимикає app.packaging, якщо false." }
+      }
+    },
+
+    "audience": {
+      "type": "array",
+      "description": "→ strategy.audience, verbal.messaging, типажі людей у фотостилі. Мінімум один сегмент.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "description": "Коротка назва сегмента." },
+          "who": { "type": "string", "description": "Хто це: вік, контекст, спосіб життя. → типажі на згенерованих фото." },
+          "job": { "type": "string", "description": "Яку задачу розв'язує вашим продуктом." },
+          "barrier": { "type": "string", "description": "Що заважає купити. → messaging" },
+          "trigger": { "type": "string", "description": "Що штовхає до вибору." },
+          "priority": { "enum": ["primary", "secondary"], "default": "primary" }
+        }
+      }
+    },
+
+    "market": {
+      "type": "object",
+      "description": "→ strategy.competitors, strategy.positioning",
+      "properties": {
+        "category": { "type": "string", "description": "У якій категорії конкуруєте в свідомості клієнта." },
+        "competitors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "url": { "type": "string" },
+              "note": { "type": "string", "description": "Що в них сильно, що слабко візуально." },
+              "relation": { "enum": ["direct", "indirect", "aspirational", "avoid-looking-like"] }
+            }
+          }
+        },
+        "differentiation": { "type": "string", "description": "Чим ви реально відрізняєтесь. Не «якістю й сервісом»." },
+        "notLike": { "type": "string", "description": "На кого категорично не хочете бути схожими. → негативні обмеження промптів." }
+      }
+    },
+
+    "brand": {
+      "type": "object",
+      "description": "→ блок STRATEGY. Можна лишити порожнім — LLM виведе з решти брифу і запише в meta.assumptions.",
+      "properties": {
+        "mission": { "type": "string" },
+        "vision": { "type": "string" },
+        "values": { "type": "array", "items": { "type": "string" }, "maxItems": 7 },
+        "essence": { "type": "string", "description": "Суть бренду 2–4 словами, якщо вже сформульована." },
+        "personality": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 7,
+          "description": "5–7 прикметників характеру. Найпряміший вплив на стиль генерації візуалу."
+        },
+        "archetype": {
+          "enum": ["creator", "sage", "explorer", "innocent", "hero", "outlaw", "magician", "everyman", "lover", "jester", "caregiver", "ruler"],
+          "description": "Якщо не вказано — виводиться з personality. → graphics.illustration, graphics.photo, motion.principles"
+        },
+        "story": { "type": "string", "description": "Історія походження. → strategy.story" }
+      }
+    },
+
+    "verbal": {
+      "type": "object",
+      "description": "→ блок VERBAL",
+      "properties": {
+        "languages": { "type": "array", "items": { "type": "string" }, "description": "Мови комунікації, перша — основна." },
+        "documentLanguage": { "type": "string", "default": "uk", "description": "Мова самого брендбуку." },
+        "tagline": { "type": "string" },
+        "toneAxes": {
+          "type": "object",
+          "description": "Позиція на осі 0–100. → verbal.tov, стає system prompt для копірайту.",
+          "properties": {
+            "formality": { "type": "integer", "minimum": 0, "maximum": 100, "description": "0 — розмовний, 100 — офіційний" },
+            "warmth": { "type": "integer", "minimum": 0, "maximum": 100, "description": "0 — стриманий, 100 — теплий" },
+            "humor": { "type": "integer", "minimum": 0, "maximum": 100, "description": "0 — серйозний, 100 — грайливий" },
+            "expertise": { "type": "integer", "minimum": 0, "maximum": 100, "description": "0 — простий, 100 — експертний" }
+          }
+        },
+        "doSay": { "type": "array", "items": { "type": "string" }, "description": "Слова й формулювання, які любимо. → verbal.lexicon" },
+        "dontSay": { "type": "array", "items": { "type": "string" }, "description": "Заборонені слова й кліше." },
+        "existingCopy": { "type": "string", "description": "Зразок наявних текстів — найточніше джерело для калібрування TOV." }
+      }
+    },
+
+    "visual": {
+      "type": "object",
+      "description": "Найважливіший блок для генерації. Прямо конвертується в промпти. → блоки LOGO, COLOR, GRAPHICS",
+      "properties": {
+        "hasLogo": { "type": "boolean", "description": "Чи є готовий логотип у векторі. Якщо ні — брендбук неможливий у повному обсязі, знак AI не генерує." },
+        "logoNotes": { "type": "string", "description": "Що означає знак, що в ньому недоторкане." },
+        "mustKeep": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Що не можна змінювати: фірмовий колір, форма знака, шрифт. → жорсткі обмеження всіх промптів."
+        },
+        "avoid": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Візуальні мотиви під забороною: стокові рукостискання, градієнти 2010-х, певні кольори. → негативна частина промптів."
+        },
+        "colorDirection": { "type": "string", "description": "Побажання до палітри. Якщо є логотип — палітра виводиться з нього, це лише коригує." },
+        "likes": { "type": "array", "items": { "type": "string" }, "description": "Що подобається візуально і чому саме." },
+        "dislikes": { "type": "array", "items": { "type": "string" } },
+        "photography": {
+          "type": "object",
+          "description": "→ graphics.photo, найдорожча секція генерації",
+          "properties": {
+            "showPeople": { "type": "boolean", "description": "Чи присутні люди в кадрі." },
+            "peopleNotes": { "type": "string", "description": "Типажі, вік, стиль — реалістичні для ринку з company.geo." },
+            "settings": { "type": "array", "items": { "type": "string" }, "description": "Локації: виробництво, офіс, вулиця, природа, студія." },
+            "mood": { "type": "string", "description": "Настрій і світло: тепле денне, контрастне студійне, приглушене." }
+          }
+        },
+        "existingAssets": {
+          "type": "array",
+          "items": { "enum": ["logo", "colors", "fonts", "photos", "illustrations", "patterns", "website", "packaging"] },
+          "description": "Що вже існує і має бути збережене, а не вигадане заново."
+        }
+      }
+    },
+
+    "references": {
+      "type": "object",
+      "description": "→ strategy.moodboard і стильові якорі промптів",
+      "properties": {
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["url"],
+            "properties": {
+              "url": { "type": "string" },
+              "why": { "type": "string", "description": "Що саме подобається. Без цього референс майже марний." },
+              "aspect": { "enum": ["color", "typography", "photography", "layout", "illustration", "motion", "overall", "tone"] }
+            }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "scope": {
+      "type": "object",
+      "description": "Що саме генеруємо. → вибір секцій у пайплайні",
+      "required": ["preset"],
+      "properties": {
+        "preset": { "enum": ["mini", "standard", "full", "digital-first", "custom"] },
+        "sections": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Явний перелік id секцій. Заповнюється чекбоксами в UI, перекриває preset."
+        },
+        "excludeSections": { "type": "array", "items": { "type": "string" } },
+        "deadline": { "type": "string", "format": "date" },
+        "budgetLimitUsd": { "type": "number", "description": "Стеля витрат на генерацію. Пайплайн зупиняється при досягненні." }
+      }
+    },
+
+    "legal": {
+      "type": "object",
+      "description": "→ gov.legal, type.licensing",
+      "properties": {
+        "trademarkStatus": { "enum": ["registered", "pending", "none", "unknown"] },
+        "trademarkSymbol": { "enum": ["®", "™", "none"] },
+        "fontLicenses": { "type": "string", "description": "Які шрифти ліцензовані й на скільки місць." },
+        "restrictions": { "type": "string", "description": "Галузеві обмеження: медицина, алкоголь, фінанси, дитячі товари." }
+      }
+    }
+  }
+}
