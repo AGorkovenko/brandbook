@@ -1,0 +1,786 @@
+{
+  "$schema": "./brandbook-sections.schema.json",
+  "version": "0.1.0",
+  "updated": "2026-07-28",
+  "description": "Реєстр секцій брендбуку. Єдине джерело правди для UI (чекбокси) і пайплайну генерації. Опис полів — див. docs/01-brandbook-anatomy.md",
+
+  "productionTypes": {
+    "text": "LLM генерує текст із брифу та ресерчу",
+    "computed": "Детерміновано обчислюється з асетів або токенів",
+    "diagram": "Рендериться кодом (SVG/HTML) з даних",
+    "image-asset": "Береться з папки асетів клієнта, не генерується",
+    "image-gen": "Генерація зображень AI",
+    "video-gen": "Генерація відео AI",
+    "composite": "Асет клієнта накладається на згенеровану сцену"
+  },
+
+  "presets": {
+    "mini": { "title": "Logo Guidelines", "sections": 20, "pages": 28, "note": "Мінімум для разового підрядника" },
+    "standard": { "title": "Брендбук", "sections": 51, "pages": 72, "note": "Дефолт для більшості компаній" },
+    "full": { "title": "Повний брендбук", "sections": 73, "pages": 104, "note": "Корпорація, франшиза, ребрендинг" },
+    "digital-first": { "title": "Digital-first", "sections": 53, "pages": 74, "note": "SaaS, застосунок, продукт" }
+  },
+
+  "groups": [
+    { "id": "meta", "order": 0, "title": "Службові сторінки" },
+    { "id": "strategy", "order": 1, "title": "Стратегічний фундамент" },
+    { "id": "verbal", "order": 2, "title": "Вербальна ідентичність" },
+    { "id": "logo", "order": 3, "title": "Логотип" },
+    { "id": "color", "order": 4, "title": "Колір" },
+    { "id": "typography", "order": 5, "title": "Типографіка" },
+    { "id": "graphics", "order": 6, "title": "Графічна мова" },
+    { "id": "motion", "order": 7, "title": "Рух і звук" },
+    { "id": "applications", "order": 8, "title": "Носії та застосування" },
+    { "id": "digital", "order": 9, "title": "Digital / UI-система" },
+    { "id": "governance", "order": 10, "title": "Правила й адміністрування" }
+  ],
+
+  "sections": [
+    {
+      "id": "meta.cover",
+      "group": "meta",
+      "title": "Обкладинка",
+      "description": "Назва бренду, тип документа, версія, рік. Перший візуальний тест системи.",
+      "pages": 1,
+      "production": ["composite"],
+      "needs": ["logo.primary", "color.primary"],
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "meta.contents",
+      "group": "meta",
+      "title": "Зміст",
+      "description": "Автогенерується з відмічених секцій.",
+      "pages": 1,
+      "production": ["computed"],
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "meta.how-to-use",
+      "group": "meta",
+      "title": "Як користуватися документом",
+      "description": "Для кого документ, що обов'язкове, що рекомендаційне, до кого звертатись у спірних випадках.",
+      "pages": 1,
+      "production": ["text"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "meta.manifesto",
+      "group": "meta",
+      "title": "Маніфест / вступне слово",
+      "description": "Емоційний вступ від першої особи бренду. Задає тон усьому документу.",
+      "pages": 1,
+      "production": ["text", "image-gen"],
+      "needs": ["strategy.essence", "verbal.tov"],
+      "presets": ["full"]
+    },
+
+    {
+      "id": "strategy.essence",
+      "group": "strategy",
+      "title": "Суть бренду (brand essence)",
+      "description": "Ядро бренду у 2–4 словах. Джерело істини для всіх промптів генерації далі.",
+      "pages": 1,
+      "production": ["text"],
+      "inputs": ["brief", "research"],
+      "critical": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "strategy.mission-vision",
+      "group": "strategy",
+      "title": "Місія та візія",
+      "description": "Навіщо компанія існує сьогодні і яким бачить світ після себе.",
+      "pages": 1,
+      "production": ["text"],
+      "inputs": ["brief"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "strategy.values",
+      "group": "strategy",
+      "title": "Цінності",
+      "description": "3–5 цінностей, кожна з поведінковим проявом: «це означає, що ми…».",
+      "pages": 1,
+      "production": ["text"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "strategy.positioning",
+      "group": "strategy",
+      "title": "Позиціонування",
+      "description": "Для кого / у якій категорії / яка вигода / чому вірити. Один абзац, який можна процитувати.",
+      "pages": 1,
+      "production": ["text"],
+      "inputs": ["brief", "research"],
+      "critical": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "strategy.audience",
+      "group": "strategy",
+      "title": "Цільові аудиторії",
+      "description": "2–4 сегменти: контекст, потреба (job to be done), бар'єр, тригер вибору.",
+      "pages": 2,
+      "production": ["text", "image-gen"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "strategy.archetype",
+      "group": "strategy",
+      "title": "Архетип і характер бренду",
+      "description": "Архетип + 5–7 прикметників характеру. Прямо конвертується в стиль візуалу й TOV.",
+      "pages": 1,
+      "production": ["text"],
+      "critical": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "strategy.story",
+      "group": "strategy",
+      "title": "Історія бренду",
+      "description": "Наратив походження: звідки, чому, що змінилось. Основа для сторітелінгу в комунікаціях.",
+      "pages": 1,
+      "production": ["text", "image-gen"],
+      "presets": ["full"]
+    },
+    {
+      "id": "strategy.competitors",
+      "group": "strategy",
+      "title": "Конкурентне поле й відмінності",
+      "description": "Карта категорії, чим бренд не є, точки відмінності.",
+      "pages": 1,
+      "production": ["text", "diagram"],
+      "inputs": ["research"],
+      "presets": ["full"]
+    },
+    {
+      "id": "strategy.moodboard",
+      "group": "strategy",
+      "title": "Мудборд і візуальний напрямок",
+      "description": "Візуальна територія бренду з референсів клієнта та згенерованих доповнень.",
+      "pages": 2,
+      "production": ["image-asset", "image-gen"],
+      "inputs": ["references"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+
+    {
+      "id": "verbal.name",
+      "group": "verbal",
+      "title": "Назва бренду",
+      "description": "Правильне написання, регістр, транслітерація, відмінювання, чого не робити з назвою.",
+      "pages": 1,
+      "production": ["text"],
+      "rule": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "verbal.tagline",
+      "group": "verbal",
+      "title": "Тагляйн і слогани",
+      "description": "Основний тагляйн, кампанійні слогани, правила співвідношення з логотипом.",
+      "pages": 1,
+      "production": ["text"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "verbal.tov",
+      "group": "verbal",
+      "title": "Tone of voice",
+      "description": "Голос бренду за осями (формальність, емоційність, гумор, експертність) + приклад однієї фрази в 4 варіантах.",
+      "pages": 2,
+      "production": ["text"],
+      "needs": ["strategy.archetype"],
+      "critical": true,
+      "rule": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "verbal.messaging",
+      "group": "verbal",
+      "title": "Меседж-фреймворк",
+      "description": "Головне повідомлення + по одному ключовому меседжу на аудиторію та на канал.",
+      "pages": 1,
+      "production": ["text"],
+      "needs": ["strategy.audience"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "verbal.lexicon",
+      "group": "verbal",
+      "title": "Словник бренду",
+      "description": "Говоримо / не говоримо. Терміни, назви продуктів, заборонені кліше.",
+      "pages": 1,
+      "production": ["text"],
+      "rule": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "verbal.copy-examples",
+      "group": "verbal",
+      "title": "Приклади текстів",
+      "description": "Готові зразки: заголовок сайту, пост, пуш, лист, відповідь на скаргу.",
+      "pages": 2,
+      "production": ["text"],
+      "needs": ["verbal.tov"],
+      "presets": ["full", "digital-first"]
+    },
+    {
+      "id": "verbal.localization",
+      "group": "verbal",
+      "title": "Мови й локалізація",
+      "description": "Мови комунікації, що не перекладається, правила для кожної локалі.",
+      "pages": 1,
+      "production": ["text"],
+      "rule": true,
+      "presets": ["full"]
+    },
+
+    {
+      "id": "logo.idea",
+      "group": "logo",
+      "title": "Ідея та конструкція знака",
+      "description": "Що означає знак, з чого побудований, геометрія і пропорції.",
+      "pages": 1,
+      "production": ["diagram", "text"],
+      "assets": ["logo:vector"],
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "logo.primary",
+      "group": "logo",
+      "title": "Основна версія логотипа",
+      "description": "Головний лок-ап, який використовується за замовчуванням.",
+      "pages": 1,
+      "production": ["image-asset"],
+      "assets": ["logo:vector"],
+      "critical": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "logo.variants",
+      "group": "logo",
+      "title": "Допоміжні версії",
+      "description": "Горизонтальна, вертикальна, компактна, лише знак — і коли яку брати.",
+      "pages": 2,
+      "production": ["image-asset", "diagram"],
+      "assets": ["logo:vector"],
+      "rule": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "logo.monochrome",
+      "group": "logo",
+      "title": "Монохром та інверсія",
+      "description": "Одноколірна, чорна, біла, вибивка. Для гравіювання, факсу, одноколірного друку.",
+      "pages": 1,
+      "production": ["image-asset"],
+      "presets": ["mini", "standard", "full"]
+    },
+    {
+      "id": "logo.clearspace",
+      "group": "logo",
+      "title": "Охоронне поле",
+      "description": "Мінімальний вільний простір навколо знака, заданий у власних одиницях x.",
+      "pages": 1,
+      "production": ["diagram"],
+      "critical": true,
+      "rule": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "logo.min-size",
+      "group": "logo",
+      "title": "Мінімальні розміри",
+      "description": "Окремо для друку (мм) і для екрана (px), для кожної версії знака.",
+      "pages": 1,
+      "production": ["diagram"],
+      "critical": true,
+      "rule": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "logo.on-backgrounds",
+      "group": "logo",
+      "title": "Логотип на фонах",
+      "description": "Допустимі кольорові фони, поведінка на фото, вимоги до контрасту й затемнення.",
+      "pages": 2,
+      "production": ["composite", "image-gen"],
+      "needs": ["color.primary"],
+      "rule": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "logo.misuse",
+      "group": "logo",
+      "title": "Заборони використання",
+      "description": "8–12 антиприкладів: розтягнути, перефарбувати, обвести, нахилити, додати тінь, переставити елементи.",
+      "pages": 2,
+      "production": ["composite", "diagram"],
+      "critical": true,
+      "rule": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "logo.sub-brands",
+      "group": "logo",
+      "title": "Саб-бренди й продуктові лок-апи",
+      "description": "Архітектура бренду і побудова знаків для напрямів, продуктів, підрозділів.",
+      "pages": 2,
+      "production": ["diagram", "text"],
+      "presets": ["full"]
+    },
+
+    {
+      "id": "color.primary",
+      "group": "color",
+      "title": "Основна палітра",
+      "description": "2–4 базові кольори бренду з назвами та значеннями.",
+      "pages": 1,
+      "production": ["computed", "text"],
+      "assets": ["logo:vector", "references"],
+      "critical": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "color.secondary",
+      "group": "color",
+      "title": "Додаткова палітра",
+      "description": "Розширення для складних макетів, інфографіки, підкатегорій.",
+      "pages": 1,
+      "production": ["computed"],
+      "needs": ["color.primary"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "color.roles",
+      "group": "color",
+      "title": "Ролі та пропорції",
+      "description": "Що є фоном, акцентом, текстом; співвідношення використання (напр. 60/30/10).",
+      "pages": 1,
+      "production": ["diagram", "text"],
+      "needs": ["color.primary"],
+      "rule": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "color.codes",
+      "group": "color",
+      "title": "Кольорові коди",
+      "description": "HEX, RGB, CMYK, Pantone, RAL, плівка Oracal — для кожного кольору палітри.",
+      "pages": 1,
+      "production": ["computed"],
+      "needs": ["color.primary"],
+      "critical": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "color.contrast",
+      "group": "color",
+      "title": "Контраст і доступність",
+      "description": "Матриця допустимих пар текст/фон із перевіркою WCAG AA та AAA.",
+      "pages": 1,
+      "production": ["computed", "diagram"],
+      "needs": ["color.primary", "color.secondary"],
+      "rule": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "color.dark-mode",
+      "group": "color",
+      "title": "Темна тема",
+      "description": "Поведінка палітри на темному фоні, підняття рівнів поверхонь, корекція насиченості.",
+      "pages": 1,
+      "production": ["computed", "diagram"],
+      "needs": ["color.roles"],
+      "presets": ["digital-first", "full"]
+    },
+    {
+      "id": "color.misuse",
+      "group": "color",
+      "title": "Заборонені колірні комбінації",
+      "description": "Пари, які руйнують читабельність або характер бренду.",
+      "pages": 1,
+      "production": ["diagram"],
+      "rule": true,
+      "presets": ["standard", "full"]
+    },
+
+    {
+      "id": "type.primary",
+      "group": "typography",
+      "title": "Основна гарнітура",
+      "description": "Шрифт, доступні накреслення, характер, чому саме він.",
+      "pages": 1,
+      "production": ["diagram", "text"],
+      "critical": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "type.secondary",
+      "group": "typography",
+      "title": "Додаткова та системна гарнітура",
+      "description": "Акцидентний шрифт і безпечний фолбек для веб, офісу, партнерів.",
+      "pages": 1,
+      "production": ["diagram", "text"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "type.scale",
+      "group": "typography",
+      "title": "Типографічна шкала",
+      "description": "H1…H6, body, caption: кегль, інтерлін'яж, трекінг, вага — для друку і екрана.",
+      "pages": 2,
+      "production": ["computed", "diagram"],
+      "needs": ["type.primary"],
+      "critical": true,
+      "rule": true,
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "type.rules",
+      "group": "typography",
+      "title": "Правила набору",
+      "description": "Вирівнювання, довжина рядка, переноси, лапки-ялинки, тире, цифри, капітель.",
+      "pages": 1,
+      "production": ["text", "diagram"],
+      "rule": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "type.misuse",
+      "group": "typography",
+      "title": "Типографічні заборони",
+      "description": "Штучний курсив, розтягування, надмірний трекінг, змішування гарнітур.",
+      "pages": 1,
+      "production": ["diagram"],
+      "rule": true,
+      "presets": ["standard", "full"]
+    },
+    {
+      "id": "type.licensing",
+      "group": "typography",
+      "title": "Ліцензії на шрифти",
+      "description": "Тип ліцензії, кількість місць, вебшрифти, де взяти файли.",
+      "pages": 1,
+      "production": ["text"],
+      "presets": ["full"]
+    },
+
+    {
+      "id": "graphics.grid",
+      "group": "graphics",
+      "title": "Сітка й модульна система",
+      "description": "Базовий модуль, колонки, поля, ритм відступів для друку й екрана.",
+      "pages": 1,
+      "production": ["diagram"],
+      "rule": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "graphics.elements",
+      "group": "graphics",
+      "title": "Фірмові графічні елементи",
+      "description": "Носій ідентичності: рамка, зріз, лінія, плашка. Правила побудови й розміщення.",
+      "pages": 2,
+      "production": ["diagram", "image-gen"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "graphics.patterns",
+      "group": "graphics",
+      "title": "Патерни й текстури",
+      "description": "Безшовні патерни, масштаби, кольорові варіанти, де застосовувати.",
+      "pages": 2,
+      "production": ["image-gen"],
+      "needs": ["color.primary", "graphics.elements"],
+      "presets": ["standard", "full"]
+    },
+    {
+      "id": "graphics.icons",
+      "group": "graphics",
+      "title": "Іконографія",
+      "description": "Стиль, розмірна сітка, товщина штриха, скруглення + базовий набір іконок.",
+      "pages": 2,
+      "production": ["image-gen", "diagram"],
+      "rule": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "graphics.illustration",
+      "group": "graphics",
+      "title": "Ілюстративний стиль",
+      "description": "Манера, палітра, композиція, рівень деталізації + серія прикладів.",
+      "pages": 2,
+      "production": ["image-gen"],
+      "needs": ["strategy.archetype", "color.primary"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "graphics.photo",
+      "group": "graphics",
+      "title": "Фотостиль",
+      "description": "Сюжети, світло, колірна обробка, кадрування, робота з людьми + do/don't.",
+      "pages": 3,
+      "production": ["image-gen"],
+      "needs": ["strategy.archetype", "strategy.moodboard"],
+      "rule": true,
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "graphics.3d",
+      "group": "graphics",
+      "title": "3D і матеріали",
+      "description": "Матеріали, освітлення, ракурси, рівень реалізму для 3D-візуалізацій.",
+      "pages": 1,
+      "production": ["image-gen"],
+      "presets": ["full"]
+    },
+    {
+      "id": "graphics.infographics",
+      "group": "graphics",
+      "title": "Інфографіка й діаграми",
+      "description": "Стиль графіків, колірне кодування даних, підписи, легенди.",
+      "pages": 1,
+      "production": ["diagram"],
+      "needs": ["color.secondary"],
+      "presets": ["full", "digital-first"]
+    },
+
+    {
+      "id": "motion.logo",
+      "group": "motion",
+      "title": "Анімація логотипа",
+      "description": "Інтро/аутро знака: сценарій, тривалість, easing.",
+      "pages": 1,
+      "production": ["video-gen", "composite"],
+      "assets": ["logo:vector"],
+      "presets": ["full", "digital-first"]
+    },
+    {
+      "id": "motion.principles",
+      "group": "motion",
+      "title": "Принципи руху",
+      "description": "Тайминги, криві прискорення, дистанції, характер руху як прояв характеру бренду.",
+      "pages": 1,
+      "production": ["text", "diagram"],
+      "needs": ["strategy.archetype"],
+      "rule": true,
+      "presets": ["full", "digital-first"]
+    },
+    {
+      "id": "motion.video-style",
+      "group": "motion",
+      "title": "Відеостиль",
+      "description": "Темп монтажу, кадрування, колір, титри й лоуер-терди + референсний ролик.",
+      "pages": 2,
+      "production": ["video-gen"],
+      "needs": ["graphics.photo"],
+      "presets": ["full"]
+    },
+    {
+      "id": "motion.audio",
+      "group": "motion",
+      "title": "Аудіобрендинг",
+      "description": "Звуковий логотип, музичний напрямок, голос диктора, звуки інтерфейсу.",
+      "pages": 1,
+      "production": ["text"],
+      "presets": ["full"]
+    },
+
+    {
+      "id": "app.stationery",
+      "group": "applications",
+      "title": "Ділова документація",
+      "description": "Бланк, конверт, візитка, папка, бейдж — із розмірами й полями.",
+      "pages": 3,
+      "production": ["composite"],
+      "rule": true,
+      "presets": ["mini", "standard", "full"]
+    },
+    {
+      "id": "app.presentation",
+      "group": "applications",
+      "title": "Шаблон презентації",
+      "description": "Титул, розділювач, контентні лейаути, слайд з даними, фінальний слайд.",
+      "pages": 2,
+      "production": ["diagram", "composite"],
+      "needs": ["type.scale", "graphics.grid"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "app.social",
+      "group": "applications",
+      "title": "Соціальні мережі",
+      "description": "Аватар, обкладинки, сітка постів, сторіз, рекламні формати.",
+      "pages": 3,
+      "production": ["composite", "image-gen"],
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "app.website",
+      "group": "applications",
+      "title": "Сайт",
+      "description": "Головна сторінка як демонстрація системи: хедер, герой, блоки, футер.",
+      "pages": 2,
+      "production": ["composite", "image-gen"],
+      "needs": ["digital.components"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "app.email",
+      "group": "applications",
+      "title": "Email-шаблони",
+      "description": "Транзакційний і промо-лист, підпис у пошті.",
+      "pages": 1,
+      "production": ["composite"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "app.ads",
+      "group": "applications",
+      "title": "Рекламні макети",
+      "description": "Банери ключових розмірів, зовнішня реклама, друкована реклама.",
+      "pages": 2,
+      "production": ["composite", "image-gen"],
+      "presets": ["standard", "full"]
+    },
+    {
+      "id": "app.packaging",
+      "group": "applications",
+      "title": "Упаковка й етикетки",
+      "description": "Розкладки, обов'язкові елементи, ієрархія інформації на пакованні.",
+      "pages": 3,
+      "production": ["composite", "image-gen"],
+      "presets": ["full"]
+    },
+    {
+      "id": "app.merch",
+      "group": "applications",
+      "title": "Мерч і уніформа",
+      "description": "Одяг, аксесуари, сувеніри: розміщення знака, техніка нанесення.",
+      "pages": 2,
+      "production": ["composite", "image-gen"],
+      "presets": ["standard", "full"]
+    },
+    {
+      "id": "app.environment",
+      "group": "applications",
+      "title": "Середовище та навігація",
+      "description": "Вивіска, вхідна група, оформлення приміщень, навігаційні таблички.",
+      "pages": 2,
+      "production": ["composite", "image-gen"],
+      "presets": ["full"]
+    },
+    {
+      "id": "app.transport",
+      "group": "applications",
+      "title": "Транспорт",
+      "description": "Брендування легкового, вантажного транспорту, доставки.",
+      "pages": 1,
+      "production": ["composite", "image-gen"],
+      "presets": ["full"]
+    },
+
+    {
+      "id": "digital.tokens",
+      "group": "digital",
+      "title": "Дизайн-токени",
+      "description": "Колір, типографіка, відступи, радіуси, тіні у машиночитному вигляді (JSON/CSS).",
+      "pages": 2,
+      "production": ["computed"],
+      "needs": ["color.codes", "type.scale", "graphics.grid"],
+      "presets": ["digital-first", "full"]
+    },
+    {
+      "id": "digital.components",
+      "group": "digital",
+      "title": "UI-компоненти",
+      "description": "Кнопки, поля, картки, навігація, модалки — зі станами hover/active/disabled/error.",
+      "pages": 4,
+      "production": ["diagram"],
+      "needs": ["digital.tokens"],
+      "rule": true,
+      "presets": ["digital-first", "full"]
+    },
+    {
+      "id": "digital.responsive",
+      "group": "digital",
+      "title": "Адаптивність",
+      "description": "Брейкпоінти, поведінка сітки й типографіки на кожному.",
+      "pages": 1,
+      "production": ["diagram"],
+      "needs": ["graphics.grid"],
+      "rule": true,
+      "presets": ["digital-first"]
+    },
+    {
+      "id": "digital.accessibility",
+      "group": "digital",
+      "title": "Доступність",
+      "description": "Контраст, розміри тач-зон, фокус, alt-тексти, підтримка клавіатури.",
+      "pages": 1,
+      "production": ["text", "computed"],
+      "needs": ["color.contrast"],
+      "rule": true,
+      "presets": ["digital-first", "full"]
+    },
+    {
+      "id": "digital.app-icon",
+      "group": "digital",
+      "title": "Іконка застосунку й фавікон",
+      "description": "Адаптація знака під квадрат, маски платформ, малі розміри.",
+      "pages": 1,
+      "production": ["composite"],
+      "presets": ["digital-first", "full"]
+    },
+
+    {
+      "id": "gov.cobranding",
+      "group": "governance",
+      "title": "Ко-брендинг",
+      "description": "Розміщення поруч з логотипами партнерів: пропорції, роздільники, ієрархія.",
+      "pages": 1,
+      "production": ["diagram"],
+      "rule": true,
+      "presets": ["full"]
+    },
+    {
+      "id": "gov.legal",
+      "group": "governance",
+      "title": "Юридичний статус",
+      "description": "Реєстрація ТМ, використання ™ і ®, класи МКТП, обмеження на використання третіми особами.",
+      "pages": 1,
+      "production": ["text"],
+      "presets": ["standard", "full"]
+    },
+    {
+      "id": "gov.files",
+      "group": "governance",
+      "title": "Структура файлів і асетів",
+      "description": "Що додається до брендбуку, у яких форматах, правила найменування.",
+      "pages": 1,
+      "production": ["computed"],
+      "presets": ["mini", "standard", "full", "digital-first"]
+    },
+    {
+      "id": "gov.checklist",
+      "group": "governance",
+      "title": "Чеклист перед публікацією",
+      "description": "Короткий список перевірок для будь-якого макета перед випуском.",
+      "pages": 1,
+      "production": ["text"],
+      "presets": ["standard", "full", "digital-first"]
+    },
+    {
+      "id": "gov.contacts",
+      "group": "governance",
+      "title": "Версія документа й контакти",
+      "description": "Номер версії, дата, відповідальний за бренд, куди писати по погодження.",
+      "pages": 1,
+      "production": ["text"],
+      "presets": ["mini", "standard", "full", "digital-first"]
+    }
+  ]
+}

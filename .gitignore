@@ -1,0 +1,22 @@
+# Секрети — ніколи в репозиторій
+.env
+.env.local
+*.key
+
+# Вхідні матеріали клієнтів (можуть містити NDA-матеріали й важкі файли)
+input/*/*
+!input/*/.gitkeep
+
+# Результати генерації
+output/
+.cache/
+
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json.bak
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
