@@ -76,6 +76,17 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const path = url.pathname;
 
+  // Сторінку часто відкривають зі вбудованого сервера IDE (інший порт).
+  // Пускаємо тільки локальні origin: сервер має доступ до файлів проєкту,
+  // тому «*» дозволив би будь-якому сайту в браузері читати їх.
+  const origin = req.headers.origin;
+  if (origin && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+
   try {
     /* ── статика ─────────────────────────────────────────────────────── */
     if (req.method === 'GET' && (path === '/' || path === '/index.html')) {

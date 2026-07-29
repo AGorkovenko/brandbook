@@ -182,3 +182,17 @@ legend { padding: 0 8px; font-size: 13px; text-transform: uppercase; letter-spac
 .out:hover { border-color: var(--brand); }
 .out b { font-size: 13.5px; }
 .out span { font-size: 12px; color: var(--dim); }
+
+/* екран, коли сервер не знайдено */
+#offline[hidden] { display: none; }          /* інакше display:grid перебиває hidden */
+#offline { display: grid; place-items: center; min-height: 100vh; padding: 24px; }
+.offline-card {
+  max-width: 560px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 30px 32px; display: flex; flex-direction: column; gap: 14px;
+}
+.offline-card h1 { font-size: 21px; }
+.offline-card pre {
+  background: var(--bg); border: 1px solid var(--line-2); border-radius: 8px;
+  padding: 13px 16px; margin: 0; font: 14px ui-monospace, Menlo, monospace; overflow-x: auto;
+}
+.offline-card a { color: var(--brand); }

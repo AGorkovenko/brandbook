@@ -27,6 +27,39 @@ const LONG = new Set(['description', 'what', 'positioning', 'story', 'differenti
 
 let S = { schema: null, sections: null, brief: {}, buckets: {}, files: {} };
 
+/* ── пошук сервера ────────────────────────────────────────────────────────
+   Сторінку часто відкривають зі вбудованого сервера IDE (WebStorm тримає
+   свій на 63342). Там немає ні /api/*, ні статики за абсолютними шляхами,
+   тож пробуємо власний origin, а потім типові порти нашого сервера. */
+let API = '';
+
+async function findApi() {
+  const candidates = [location.origin, 'http://localhost:4000', 'http://127.0.0.1:4000'];
+  for (const base of candidates) {
+    try {
+      const r = await fetch(base + '/api/bootstrap', { signal: AbortSignal.timeout(2500) });
+      if (r.ok) return { base: base === location.origin ? '' : base, data: await r.json() };
+    } catch { /* пробуємо наступний */ }
+  }
+  return null;
+}
+
+function showOffline() {
+  document.querySelector('header').hidden = true;
+  document.querySelector('main').hidden = true;
+  const box = $('#offline');
+  box.hidden = false;
+  box.innerHTML = `
+    <div class="offline-card">
+      <h1>Інтерфейс запускається окремою командою</h1>
+      <p>Ця сторінка не працює як звичайний файл: їй потрібен локальний сервер,
+         який читає й записує файли проєкту. Вбудований сервер IDE цього не вміє.</p>
+      <pre>node src/cli.js ui</pre>
+      <p class="muted">Далі відкрийте <a href="http://localhost:4000">http://localhost:4000</a>.
+         Якщо сервер уже запущено на іншому порту — відкривайте саме його адресу.</p>
+    </div>`;
+}
+
 /* ── навігація ────────────────────────────────────────────────────────── */
 $$('.tab').forEach(t => t.addEventListener('click', () => {
   $$('.tab').forEach(x => x.classList.toggle('is-on', x === t));
@@ -382,7 +415,7 @@ async function doUpload() {
   const fd = new FormData();
   for (const { file, bucket } of queue) fd.append(bucket, file, file.name);
   setStatus('завантаження…');
-  const r = await fetch('/api/upload', { method: 'POST', body: fd }).then(r => r.json());
+  const r = await fetch(API + '/api/upload', { method: 'POST', body: fd }).then(r => r.json());
   queue = []; renderQueue();
   S.files = r.files; renderBuckets();
   setStatus(`завантажено ${r.saved.length}`);
@@ -403,7 +436,7 @@ function renderBuckets() {
             el('button', {
               class: 'x', title: 'видалити',
               onclick: async () => {
-                const r = await fetch(`/api/file?bucket=${key}&name=${encodeURIComponent(f.name)}`,
+                const r = await fetch(`${API}/api/file?bucket=${key}&name=${encodeURIComponent(f.name)}`,
                   { method: 'DELETE' }).then(r => r.json());
                 S.files = r.files; renderBuckets(); checkLogo();
               }
@@ -434,7 +467,7 @@ function showReport(rep) {
 $('#btn-save').addEventListener('click', async () => {
   const brief = collectForm();
   setStatus('збереження…');
-  const rep = await fetch('/api/brief', {
+  const rep = await fetch(API + '/api/brief', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(brief)
   }).then(r => r.json());
@@ -446,7 +479,7 @@ $('#btn-save').addEventListener('click', async () => {
 function stream(params, onDone) {
   const log = $('#log');
   log.textContent = '';
-  const es = new EventSource('/api/run?' + new URLSearchParams(params));
+  const es = new EventSource(API + '/api/run?' + new URLSearchParams(params));
   es.addEventListener('log', e => {
     log.textContent += JSON.parse(e.data);
     log.scrollTop = log.scrollHeight;
@@ -477,14 +510,14 @@ $('#btn-build').addEventListener('click', () => {
 });
 
 async function loadOutputs() {
-  const { files } = await fetch('/api/output').then(r => r.json());
+  const { files } = await fetch(API + '/api/output').then(r => r.json());
   const box = $('#outputs');
   box.innerHTML = '';
   const nice = { 'brandbook.pdf': 'Брендбук PDF', 'brandbook.html': 'Брендбук HTML',
     'tokens.json': 'Токени', 'tokens.css': 'CSS-змінні', 'strategy.json': 'Стратегія',
     'content.json': 'Тексти', 'costs.jsonl': 'Журнал витрат' };
   for (const f of files.sort((a, b) => a.name.localeCompare(b.name))) {
-    box.append(el('a', { class: 'out', href: '/output/' + f.name, target: '_blank' },
+    box.append(el('a', { class: 'out', href: API + '/output/' + f.name, target: '_blank' },
       el('b', {}, nice[f.name] ?? f.name),
       el('span', {}, fmtSize(f.size))));
   }
@@ -503,7 +536,10 @@ $('#pick').addEventListener('change', e => { addFiles(e.target.files); e.target.
 
 /* ── старт ────────────────────────────────────────────────────────────── */
 async function bootstrap() {
-  const d = await fetch('/api/bootstrap').then(r => r.json());
+  const found = await findApi();
+  if (!found) return showOffline();
+  API = found.base;
+  const d = found.data;
   S.schema = d.schema; S.sections = d.sections;
   S.brief = d.brief ?? {}; S.buckets = d.buckets; S.files = d.files;
   renderForm(); renderAssumptions(); renderSections(); renderBuckets();
