@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Брендбук — майстерня</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Брендбук</div>
+  <nav class="tabs">
+    <button class="tab is-on" data-tab="files">1 · Матеріали</button>
+    <button class="tab" data-tab="brief">2 · Бриф</button>
+    <button class="tab" data-tab="sections">3 · Секції</button>
+    <button class="tab" data-tab="run">4 · Збірка</button>
+  </nav>
+  <div class="status" id="status"></div>
+</header>
+
+<main>
+  <!-- ── 1. Матеріали ─────────────────────────────────────────────── -->
+  <section class="pane is-on" id="pane-files">
+    <div class="lead-row">
+      <div>
+        <h1>Матеріали компанії</h1>
+        <p class="muted">Перетягніть файли — вони самі розкладуться по папках.
+          Тип визначається за розширенням, папку можна змінити перед завантаженням.</p>
+      </div>
+    </div>
+
+    <div class="drop" id="drop">
+      <div class="drop-in">
+        <b>Перетягніть файли сюди</b>
+        <span class="muted">або <label class="link">оберіть<input type="file" id="pick" multiple hidden></label></span>
+      </div>
+    </div>
+
+    <div id="queue" class="queue"></div>
+
+    <div class="note" id="logo-note"></div>
+
+    <div class="buckets" id="buckets"></div>
+  </section>
+
+  <!-- ── 2. Бриф ──────────────────────────────────────────────────── -->
+  <section class="pane" id="pane-brief">
+    <div class="lead-row">
+      <div>
+        <h1>Бриф</h1>
+        <p class="muted">Заповніть вручну або складіть автоматично з матеріалів.
+          Обов'язкові поля позначено <em class="req">•</em></p>
+      </div>
+      <div class="actions">
+        <input class="inp url" id="site-url" placeholder="https://сайт-компанії" spellcheck="false">
+        <button class="btn" id="btn-extract">Скласти з матеріалів</button>
+        <button class="btn btn-primary" id="btn-save">Зберегти бриф</button>
+      </div>
+    </div>
+
+    <div id="assumptions" class="assumptions"></div>
+    <div id="report" class="report"></div>
+    <form id="form" class="form"></form>
+  </section>
+
+  <!-- ── 3. Секції ────────────────────────────────────────────────── -->
+  <section class="pane" id="pane-sections">
+    <div class="lead-row">
+      <div>
+        <h1>Що ввійде в брендбук</h1>
+        <p class="muted" id="sec-count"></p>
+      </div>
+      <div class="actions" id="presets"></div>
+    </div>
+    <div id="sections" class="sections"></div>
+  </section>
+
+  <!-- ── 4. Збірка ────────────────────────────────────────────────── -->
+  <section class="pane" id="pane-run">
+    <div class="lead-row">
+      <div>
+        <h1>Збірка</h1>
+        <p class="muted">Повторний запуск бере відповіді з кешу і не коштує нічого.</p>
+      </div>
+      <div class="actions">
+        <label class="budget">Стеля витрат $
+          <input class="inp" id="budget" type="number" value="2" min="0.1" step="0.5">
+        </label>
+        <button class="btn btn-primary" id="btn-build">Зібрати брендбук</button>
+      </div>
+    </div>
+    <pre id="log" class="log"></pre>
+    <div id="outputs" class="outputs"></div>
+  </section>
+</main>
+
+<script src="/app.js" type="module"></script>
+</body>
+</html>

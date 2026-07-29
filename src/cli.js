@@ -42,12 +42,19 @@ brandbook — генератор брендбуків
       --budget <usd>  стеля витрат на прогін
       --no-cache      не брати з кешу
 
+  ui                                 веб-інтерфейс: форма брифу, завантаження
+                                     матеріалів, вибір секцій, збірка
+      --port <n>      типово 4000
+
   build                              зібрати брендбук у PDF
       --brief  <файл>   типово input/brief/brief.json
       --out    <файл>   типово output/brandbook.pdf
       --budget <usd>    стеля витрат на прогін
 
-Повний шлях:
+Найпростіше — запустити інтерфейс:
+  node src/cli.js ui
+
+Те саме з терміналу:
   1. покласти матеріали компанії в input/brief/ (txt, md)
   2. покласти логотип у векторі в input/logo/ (svg)
   3. node src/cli.js brief:extract --url https://сайт-компанії
@@ -83,6 +90,12 @@ switch (cmd) {
     if (assumptions) console.log(dim(`припущень: ${assumptions} (підлягають підтвердженню)`));
     printReport(report);
     console.log(dim(`витрачено: $${spend.usd.toFixed(4)}`));
+    break;
+  }
+
+  case 'ui': {
+    const { startServer } = await import('./server.js');
+    startServer(Number(flag('port', 4000)));
     break;
   }
 
