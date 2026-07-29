@@ -289,8 +289,70 @@ function collectForm() {
     if (out.meta?.assumptions?.[i]) out.meta.assumptions[i].confirmed = c.checked;
   });
 
+  // Припущення прив'язані до конкретної компанії. Якщо назву змінили —
+  // старі здогади стосуються іншого бренду й потрапили б у чужий брендбук.
+  const was = S.brief.company?.name, now = out.company?.name;
+  if (was && now && was !== now && out.meta) {
+    delete out.meta.assumptions;
+    out.meta.mode = 'manual';
+  }
+
   return out;
 }
+
+/* ── чий бриф зараз завантажено ───────────────────────────────────────── */
+function syncExtractButton() {
+  const texts = (S.files.brief ?? []).length;
+  const btn = $('#btn-extract');
+  btn.disabled = !texts;
+  btn.title = texts
+    ? `Прочитає ${texts} файл(ів) з input/brief/`
+    : 'Немає текстових матеріалів. Додайте .txt або .md на вкладці «Матеріали» — або вкажіть URL сайту.';
+  const url = $('#site-url').value.trim();
+  if (!texts && url) btn.disabled = false;
+}
+$('#site-url')?.addEventListener('input', () => syncExtractButton());
+
+function renderOwner() {
+  const box = $('#owner');
+  box.innerHTML = '';
+  const name = S.brief.company?.name;
+  if (!name) {
+    box.append(el('div', { class: 'owner' },
+      el('span', {}, 'Новий бриф — форма порожня.'),
+      el('span', { class: 'muted' }, 'Заповніть поля або складіть автоматично з матеріалів.')));
+    return;
+  }
+  box.append(el('div', { class: 'owner' },
+    el('span', {}, 'Завантажено бриф: ', el('b', {}, name)),
+    el('button', {
+      class: 'btn', onclick: async () => {
+        if (!confirm(`Очистити бриф «${name}» і почати з нуля?\nМатеріали у input/ не постраждають.`)) return;
+        await fetch(API + '/api/brief', { method: 'DELETE' });
+        S.brief = {};
+        renderForm(); renderAssumptions(); renderSections(); renderOwner();
+        $('#report').innerHTML = ''; markClean();
+        setStatus('бриф очищено');
+      }
+    }, 'Почати з нуля')));
+}
+
+/* ── незбережені зміни ────────────────────────────────────────────────── */
+let dirty = false;
+function markDirty() {
+  if (dirty) return;
+  dirty = true;
+  $('#btn-save').textContent = 'Зберегти бриф •';
+  $('#btn-save').classList.add('is-dirty');
+}
+function markClean() {
+  dirty = false;
+  $('#btn-save').textContent = 'Зберегти бриф';
+  $('#btn-save').classList.remove('is-dirty');
+}
+document.addEventListener('input', e => { if (e.target.closest('#form, #assumptions')) markDirty(); });
+document.addEventListener('change', e => { if (e.target.closest('#sections')) markDirty(); });
+window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
 /* ── припущення ───────────────────────────────────────────────────────── */
 function renderAssumptions() {
@@ -417,7 +479,7 @@ async function doUpload() {
   setStatus('завантаження…');
   const r = await fetch(API + '/api/upload', { method: 'POST', body: fd }).then(r => r.json());
   queue = []; renderQueue();
-  S.files = r.files; renderBuckets();
+  S.files = r.files; renderBuckets(); syncExtractButton();
   setStatus(`завантажено ${r.saved.length}`);
 }
 
@@ -473,6 +535,7 @@ $('#btn-save').addEventListener('click', async () => {
   }).then(r => r.json());
   S.brief = brief;
   showReport(rep);
+  renderOwner(); renderAssumptions(); markClean();
   setStatus(rep.ok ? 'збережено' : 'збережено з помилками');
 });
 
@@ -542,7 +605,8 @@ async function bootstrap() {
   const d = found.data;
   S.schema = d.schema; S.sections = d.sections;
   S.brief = d.brief ?? {}; S.buckets = d.buckets; S.files = d.files;
-  renderForm(); renderAssumptions(); renderSections(); renderBuckets();
+  renderForm(); renderAssumptions(); renderSections(); renderBuckets(); renderOwner();
+  syncExtractButton(); markClean();
   setStatus(d.brief ? 'бриф завантажено' : 'бриф ще не створено');
 }
 bootstrap();

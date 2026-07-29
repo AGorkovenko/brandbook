@@ -119,6 +119,11 @@ const server = createServer(async (req, res) => {
       return json(res, { saved: true, ...report });
     }
 
+    if (path === '/api/brief' && req.method === 'DELETE') {
+      if (existsSync(BRIEF_PATH)) unlinkSync(BRIEF_PATH);
+      return json(res, { cleared: true });
+    }
+
     if (path === '/api/validate' && req.method === 'POST') {
       const brief = JSON.parse((await readBody(req)).toString('utf8'));
       return json(res, validateBrief(brief));

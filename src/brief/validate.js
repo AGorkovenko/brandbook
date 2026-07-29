@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ROOT } from '../lib/env.js';
 
@@ -52,7 +52,12 @@ export function validateBrief(brief) {
   if (!copy.brand?.personality?.length && !copy.brand?.archetype) {
     warnings.push('немає brand.personality та archetype — характер виводитиметься LLM у припущення');
   }
-  if (!copy.references?.links?.length) {
+  // Референси бувають і файлами в input/references — попередження без
+  // урахування папки вводило б в оману того, хто їх щойно завантажив.
+  const refDir = resolve(ROOT, 'input/references');
+  const refFiles = existsSync(refDir)
+    ? readdirSync(refDir).filter(f => !f.startsWith('.')).length : 0;
+  if (!copy.references?.links?.length && !refFiles) {
     warnings.push('немає референсів — візуальний напрямок будуватиметься лише з тексту брифу');
   }
   for (const [i, l] of (copy.references?.links ?? []).entries()) {

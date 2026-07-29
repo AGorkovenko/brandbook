@@ -196,3 +196,13 @@ legend { padding: 0 8px; font-size: 13px; text-transform: uppercase; letter-spac
   padding: 13px 16px; margin: 0; font: 14px ui-monospace, Menlo, monospace; overflow-x: auto;
 }
 .offline-card a { color: var(--brand); }
+
+/* чий бриф завантажено */
+.owner {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 11px 15px; margin-bottom: 16px; font-size: 13.5px;
+}
+.owner b { font-weight: 700; }
+.owner button { margin-left: auto; }
+.btn.is-dirty { box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 28%, transparent); }
